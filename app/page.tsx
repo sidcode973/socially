@@ -1,6 +1,5 @@
 import PostCard from "@/components/layout/postSection/PostSection";
-
-
+import WhoToFollow from "@/components/layout/whoToFollow/WhoToFollow";
 
 export default function Home() {
   return (
@@ -10,9 +9,9 @@ export default function Home() {
         <PostCard />
       </div>
 
-      {/* Right column — placeholder for "Who to Follow" */}
+      {/* Right column — Who to Follow */}
       <div className="hidden lg:block lg:col-span-5">
-        {/* Who to Follow goes here */}
+        <WhoToFollow />
       </div>
     </div>
   );
