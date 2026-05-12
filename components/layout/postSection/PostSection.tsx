@@ -45,7 +45,7 @@ export default function PostCard() {
     <Card>
       <CardContent className="pt-6">
         <div className="flex gap-3">
-          <Avatar className="w-10 h-10 flex-shrink-0">
+          <Avatar className="w-10 h-10 shrink-0">
             <AvatarImage src={user.image || "/avatar.png"} />
             <AvatarFallback>
               {(user.name ?? user.email ?? "U").charAt(0).toUpperCase()}
@@ -58,7 +58,7 @@ export default function PostCard() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               disabled={isPending}
-              className="min-h-[60px] border-0 bg-transparent focus:ring-0 px-0 text-base"
+              className="min-h-15 border-0 bg-transparent focus:ring-0 px-0 text-base"
             />
 
             {showImage && (

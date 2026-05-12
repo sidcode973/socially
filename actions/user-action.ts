@@ -51,3 +51,54 @@ export async function getCurrentUserProfile(): Promise<CurrentUserProfile | null
     following: user._count.following,
   };
 }
+
+export type SuggestedUser = {
+  id: string;
+  name: string | null;
+  username: string;
+  image: string | null;
+  followers: number;
+};
+
+export async function getSuggestedUsers(limit = 3): Promise<SuggestedUser[]> {
+  const session = await getServerSession(authOptions);
+  const currentEmail = session?.user?.email ?? null;
+
+  // Find current user's id (if logged in) so we can exclude self + already-followed
+  let currentUserId: string | null = null;
+  if (currentEmail) {
+    const me = await prisma.user.findUnique({
+      where: { email: currentEmail },
+      select: { id: true },
+    });
+    currentUserId = me?.id ?? null;
+  }
+
+  const users = await prisma.user.findMany({
+    where: currentUserId
+      ? {
+          AND: [
+            { NOT: { id: currentUserId } },
+            { NOT: { followers: { some: { followerId: currentUserId } } } },
+          ],
+        }
+      : undefined,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      image: true,
+      _count: { select: { followers: true } },
+    },
+  });
+
+  return users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    username: u.username,
+    image: u.image,
+    followers: u._count.followers,
+  }));
+}
