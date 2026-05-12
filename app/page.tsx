@@ -2,7 +2,7 @@
 export default function Home() {
   return (
     <div>
-      Hello on develop branch
+      Hello from landing page
       
     </div>
   );
