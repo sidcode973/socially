@@ -15,6 +15,18 @@ export type CurrentUserProfile = {
   following: number;
 };
 
+export async function getCurrentUsername(): Promise<string | null> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { username: true },
+  });
+
+  return user?.username ?? null;
+}
+
 export async function getCurrentUserProfile(): Promise<CurrentUserProfile | null> {
   const session = await getServerSession(authOptions);
 
