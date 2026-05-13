@@ -1,4 +1,5 @@
 import PostCard from "@/components/layout/postSection/PostSection";
+import PostsFeed from "@/components/layout/postSection/PostsFeed";
 import WhoToFollow from "@/components/layout/whoToFollow/WhoToFollow";
 
 export default function Home() {
@@ -7,6 +8,7 @@ export default function Home() {
       {/* Middle column — ~60% of remaining width */}
       <div className="lg:col-span-7 space-y-6">
         <PostCard />
+        <PostsFeed />
       </div>
 
       {/* Right column — Who to Follow */}

@@ -31,12 +31,12 @@ export default function PostCard() {
       const result = await createPost(content, image || undefined);
 
       if (result.ok) {
-        toast.success("Post created!");
+        toast.success("Post created successfully");
         setContent("");
         setImage("");
         setShowImage(false);
       } else {
-        toast.error(result.error);
+        toast.error(result.error || "Failed to create post");
       }
     });
   }
