@@ -58,4 +58,51 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   secret: process.env.AUTH_SECRET,
+
+  callbacks: {
+    /**
+     * Ensure a `User` row exists for OAuth sign-ins (Google / GitHub) and
+     * keep the avatar synced with the latest one from the provider.
+     */
+    async signIn({ user, account }) {
+      const isOAuth = account?.provider === "google" || account?.provider === "github";
+      if (!isOAuth || !user.email) return true;
+
+      const existing = await prisma.user.findUnique({
+        where: { email: user.email },
+        select: { id: true, image: true },
+      });
+
+      if (!existing) {
+        // Derive a unique username from the email local-part
+        const base =
+          user.email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_").slice(0, 16) ||
+          "user";
+        let username = base;
+        // Add suffix if taken (try up to 5 times)
+        for (let i = 0; i < 5; i++) {
+          const taken = await prisma.user.findUnique({ where: { username } });
+          if (!taken) break;
+          username = `${base}_${Math.floor(Math.random() * 10000)}`;
+        }
+
+        await prisma.user.create({
+          data: {
+            email: user.email,
+            username,
+            name: user.name ?? null,
+            image: user.image ?? null,
+          },
+        });
+      } else if (user.image && existing.image !== user.image) {
+        // Refresh stale avatar
+        await prisma.user.update({
+          where: { id: existing.id },
+          data: { image: user.image },
+        });
+      }
+
+      return true;
+    },
+  },
 };
