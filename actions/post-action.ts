@@ -156,7 +156,30 @@ export async function toggleLike(postId: string): Promise<ToggleLikeResult> {
       return { ok: true, liked: false };
     }
 
-    await prisma.like.create({ data: { userId: myId, postId } });
+    // Need the post's author to notify (skip if liking own post)
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true },
+    });
+    if (!post) return { ok: false, error: "Post not found" };
+
+    const ops: Promise<unknown>[] = [
+      prisma.like.create({ data: { userId: myId, postId } }),
+    ];
+    if (post.authorId !== myId) {
+      ops.push(
+        prisma.notification.create({
+          data: {
+            type: "LIKE",
+            userId: post.authorId, // receiver
+            creatorId: myId,       // sender
+            postId,
+          },
+        })
+      );
+    }
+    await Promise.all(ops);
+
     revalidatePath("/");
     return { ok: true, liked: true };
   } catch (err) {
@@ -184,10 +207,29 @@ export async function createComment(
     const trimmed = content.trim();
     if (!trimmed) return { ok: false, error: "Comment cannot be empty" };
 
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true },
+    });
+    if (!post) return { ok: false, error: "Post not found" };
+
     const comment = await prisma.comment.create({
       data: { authorId: myId, postId, content: trimmed },
       select: { id: true },
     });
+
+    // Notify the post author (skip if commenting on own post)
+    if (post.authorId !== myId) {
+      await prisma.notification.create({
+        data: {
+          type: "COMMENT",
+          userId: post.authorId,
+          creatorId: myId,
+          postId,
+          commentId: comment.id,
+        },
+      });
+    }
 
     revalidatePath("/");
     return { ok: true, commentId: comment.id };

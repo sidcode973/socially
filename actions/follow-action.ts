@@ -46,9 +46,20 @@ export async function toggleFollow(targetUserId: string): Promise<ToggleFollowRe
       return { ok: true, following: false };
     }
 
-    await prisma.follows.create({
-      data: { followerId: me.id, followingId: targetUserId },
-    });
+    // Use a transaction: create the follow + the notification together
+    await prisma.$transaction([
+      prisma.follows.create({
+        data: { followerId: me.id, followingId: targetUserId },
+      }),
+      prisma.notification.create({
+        data: {
+          type: "FOLLOW",
+          userId: targetUserId,   // receiver
+          creatorId: me.id,       // sender
+        },
+      }),
+    ]);
+
     revalidatePath("/");
     return { ok: true, following: true };
   } catch (err) {

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import {
@@ -12,12 +14,29 @@ import {
   UserIcon,
 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
+import { getUnreadNotificationCount } from "@/actions/notification-action";
+import { getCurrentUsername } from "@/actions/user-action";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
+  const [unreadState, setUnread] = useState(0);
+  const [usernameState, setUsername] = useState<string | null>(null);
 
   const user = session?.user;
+
+  // Re-fetch only when logged in. No synchronous setState — values are
+  // derived from `user` below so logout resets them automatically.
+  useEffect(() => {
+    if (!user) return;
+    getUnreadNotificationCount().then(setUnread).catch(() => setUnread(0));
+    getCurrentUsername().then(setUsername).catch(() => setUsername(null));
+  }, [user, pathname]);
+
+  // Derived values — when user is null, fall back to defaults
+  const unread = user ? unreadState : 0;
+  const username = user ? usernameState : null;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -36,11 +55,12 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-muted text-foreground/80 transition"
+              className="relative h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-muted text-foreground/80 transition"
               aria-label="Toggle theme"
             >
               <SunIcon className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <MoonIcon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
             </button>
 
             {/* Home */}
@@ -55,16 +75,23 @@ export default function Navbar() {
             {/* Notifications */}
             <Link
               href="/notifications"
-              className="h-9 px-3 inline-flex items-center gap-2 rounded-md text-sm text-foreground/80 hover:bg-muted hover:text-foreground transition"
+              className="relative h-9 px-3 inline-flex items-center gap-2 rounded-md text-sm text-foreground/80 hover:bg-muted hover:text-foreground transition"
             >
-              <BellIcon className="h-4 w-4" />
+              <span className="relative inline-flex">
+                <BellIcon className="h-4 w-4" />
+                {unread > 0 && (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold flex items-center justify-center leading-none">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
+              </span>
               <span className="hidden sm:inline">Notifications</span>
             </Link>
 
             {/* Profile link (when not logged in shows Login) */}
             {user ? (
               <Link
-                href={`/profile/${user.email?.split("@")[0]}`}
+                href={username ? `/profile/${username}` : "/"}
                 className="h-9 px-3 inline-flex items-center gap-2 rounded-md text-sm text-foreground/80 hover:bg-muted hover:text-foreground transition"
               >
                 <UserIcon className="h-4 w-4" />
