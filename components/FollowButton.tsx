@@ -7,10 +7,12 @@ import { toggleFollow } from "@/actions/follow-action";
 
 export default function FollowButton({
   targetUserId,
+  initialFollowing = false,
 }: {
   targetUserId: string;
+  initialFollowing?: boolean;
 }) {
-  const [following, setFollowing] = useState(false);
+  const [following, setFollowing] = useState(initialFollowing);
   const [isPending, startTransition] = useTransition();
 
   function handleClick() {

@@ -133,6 +133,90 @@ export async function getPosts(): Promise<FeedPost[]> {
   }));
 }
 
+// ────────────────── Get posts by a specific user ──────────────────
+
+export async function getUserPosts(username: string): Promise<FeedPost[]> {
+  const myId = await getCurrentUserId();
+
+  const posts = await prisma.post.findMany({
+    where: { author: { username } },
+    orderBy: { createdAt: "desc" },
+    include: {
+      author: { select: { id: true, name: true, username: true, image: true } },
+      comments: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          author: { select: { id: true, name: true, username: true, image: true } },
+        },
+      },
+      likes: myId
+        ? { where: { userId: myId }, select: { id: true } }
+        : { take: 0 },
+      _count: { select: { likes: true, comments: true } },
+    },
+  });
+
+  return posts.map((p) => ({
+    id: p.id,
+    content: p.content,
+    image: p.image,
+    createdAt: p.createdAt,
+    author: p.author,
+    likeCount: p._count.likes,
+    commentCount: p._count.comments,
+    likedByMe: myId ? p.likes.length > 0 : false,
+    canDelete: !!myId && myId === p.author.id,
+    comments: p.comments.map((c) => ({
+      id: c.id,
+      content: c.content,
+      createdAt: c.createdAt,
+      author: c.author,
+    })),
+  }));
+}
+
+// ────────────────── Get posts liked by a specific user ──────────────────
+
+export async function getUserLikedPosts(username: string): Promise<FeedPost[]> {
+  const myId = await getCurrentUserId();
+
+  const posts = await prisma.post.findMany({
+    where: { likes: { some: { user: { username } } } },
+    orderBy: { createdAt: "desc" },
+    include: {
+      author: { select: { id: true, name: true, username: true, image: true } },
+      comments: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          author: { select: { id: true, name: true, username: true, image: true } },
+        },
+      },
+      likes: myId
+        ? { where: { userId: myId }, select: { id: true } }
+        : { take: 0 },
+      _count: { select: { likes: true, comments: true } },
+    },
+  });
+
+  return posts.map((p) => ({
+    id: p.id,
+    content: p.content,
+    image: p.image,
+    createdAt: p.createdAt,
+    author: p.author,
+    likeCount: p._count.likes,
+    commentCount: p._count.comments,
+    likedByMe: myId ? p.likes.length > 0 : false,
+    canDelete: !!myId && myId === p.author.id,
+    comments: p.comments.map((c) => ({
+      id: c.id,
+      content: c.content,
+      createdAt: c.createdAt,
+      author: c.author,
+    })),
+  }));
+}
+
 // ────────────────── Toggle like ──────────────────
 
 export type ToggleLikeResult =
@@ -153,6 +237,7 @@ export async function toggleLike(postId: string): Promise<ToggleLikeResult> {
         where: { userId_postId: { userId: myId, postId } },
       });
       revalidatePath("/");
+      revalidatePath("/profile", "layout");
       return { ok: true, liked: false };
     }
 
@@ -181,6 +266,7 @@ export async function toggleLike(postId: string): Promise<ToggleLikeResult> {
     await Promise.all(ops);
 
     revalidatePath("/");
+    revalidatePath("/profile", "layout");
     return { ok: true, liked: true };
   } catch (err) {
     return {
