@@ -199,19 +199,110 @@ export async function updateProfile(data: {
   }
 }
 
+export type ExploreUser = {
+  id: string;
+  name: string | null;
+  username: string;
+  image: string | null;
+  bio: string | null;
+  followers: number;
+  isFollowedByMe: boolean;
+};
+
+export type GetAllUsersResult = {
+  users: ExploreUser[];
+  hasMore: boolean;
+};
+
+export async function getAllUsers({
+  page = 0,
+  query = "",
+  take = 20,
+}: {
+  page?: number;
+  query?: string;
+  take?: number;
+} = {}): Promise<GetAllUsersResult> {
+  const session = await getServerSession(authOptions);
+  let myId: string | null = null;
+  if (session?.user?.email) {
+    const me = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+    myId = me?.id ?? null;
+  }
+
+  const trimmedQuery = query.trim();
+
+  // Build where clause:
+  // - Always exclude current user
+  // - If search query present, filter by name OR username
+  const where: object = {
+    AND: [
+      myId ? { NOT: { id: myId } } : {},
+      trimmedQuery
+        ? {
+            OR: [
+              { username: { contains: trimmedQuery, mode: "insensitive" } },
+              { name: { contains: trimmedQuery, mode: "insensitive" } },
+            ],
+          }
+        : {},
+    ],
+  };
+
+  // Fetch take+1 so we can tell if there's more
+  const users = await prisma.user.findMany({
+    where,
+    take: take + 1,
+    skip: page * take,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      image: true,
+      bio: true,
+      _count: { select: { followers: true } },
+      followers: myId
+        ? { where: { followerId: myId }, select: { followerId: true } }
+        : { take: 0 },
+    },
+  });
+
+  const hasMore = users.length > take;
+  const sliced = hasMore ? users.slice(0, take) : users;
+
+  return {
+    users: sliced.map((u) => ({
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      image: u.image,
+      bio: u.bio,
+      followers: u._count.followers,
+      isFollowedByMe: !!myId && u.followers.length > 0,
+    })),
+    hasMore,
+  };
+}
+
 export type SuggestedUser = {
   id: string;
   name: string | null;
   username: string;
   image: string | null;
   followers: number;
+  isFollowedByMe: boolean;
 };
 
 export async function getSuggestedUsers(limit = 3): Promise<SuggestedUser[]> {
   const session = await getServerSession(authOptions);
   const currentEmail = session?.user?.email ?? null;
 
-  // Find current user's id (if logged in) so we can exclude self + already-followed
+  // Find current user's id (if logged in) — used to exclude self and to flag
+  // which suggestions you're already following.
   let currentUserId: string | null = null;
   if (currentEmail) {
     const me = await prisma.user.findUnique({
@@ -221,7 +312,9 @@ export async function getSuggestedUsers(limit = 3): Promise<SuggestedUser[]> {
     currentUserId = me?.id ?? null;
   }
 
-  const users = await prisma.user.findMany({
+  // Strategy: try unfollowed users first. If none, fall back to showing any
+  // other users so the sidebar always has something.
+  let users = await prisma.user.findMany({
     where: currentUserId
       ? {
           AND: [
@@ -238,8 +331,28 @@ export async function getSuggestedUsers(limit = 3): Promise<SuggestedUser[]> {
       username: true,
       image: true,
       _count: { select: { followers: true } },
+      followers: currentUserId
+        ? { where: { followerId: currentUserId }, select: { followerId: true } }
+        : { take: 0 },
     },
   });
+
+  if (users.length === 0 && currentUserId) {
+    // Already following everyone — fall back to any non-self users
+    users = await prisma.user.findMany({
+      where: { NOT: { id: currentUserId } },
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        image: true,
+        _count: { select: { followers: true } },
+        followers: { where: { followerId: currentUserId }, select: { followerId: true } },
+      },
+    });
+  }
 
   return users.map((u) => ({
     id: u.id,
@@ -247,5 +360,7 @@ export async function getSuggestedUsers(limit = 3): Promise<SuggestedUser[]> {
     username: u.username,
     image: u.image,
     followers: u._count.followers,
+    isFollowedByMe: !!currentUserId && u.followers.length > 0,
   }));
 }
+
