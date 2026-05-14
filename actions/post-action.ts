@@ -97,7 +97,16 @@ async function getCurrentUserId(): Promise<string | null> {
 export async function getPosts(): Promise<FeedPost[]> {
   const myId = await getCurrentUserId();
 
+  // Not logged in → no feed
+  if (!myId) return [];
+
   const posts = await prisma.post.findMany({
+    where: {
+      OR: [
+        { authorId: myId }, // my own posts
+        { author: { followers: { some: { followerId: myId } } } }, // posts from people I follow
+      ],
+    },
     orderBy: { createdAt: "desc" },
     include: {
       author: { select: { id: true, name: true, username: true, image: true } },
