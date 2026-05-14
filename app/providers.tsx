@@ -15,12 +15,9 @@ const Providers = ({ children}: providerProps) => {
         <Toaster
           position="top-center"
           toastOptions={{
-            style: {
-              background: '#1c1c1c',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,0.1)',
-              fontSize: '14px',
-            },
+            className:
+              "!bg-popover !text-popover-foreground !border !border-border",
+            style: { fontSize: '14px' },
             success: { iconTheme: { primary: '#a855f7', secondary: '#fff' } },
             error:   { iconTheme: { primary: '#f87171', secondary: '#fff' } },
           }}

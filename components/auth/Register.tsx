@@ -40,34 +40,35 @@ export default function Register() {
     }
   }
 
-  const inputCls = "w-full rounded-lg bg-[#242424] px-3 py-2 text-sm text-white placeholder-neutral-500 outline-none focus:ring-2 focus:ring-violet-600 transition";
+  const inputCls =
+    "w-full rounded-lg bg-muted px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-violet-600 transition";
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0d0d0d] px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#161616] px-7 py-8 shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card text-card-foreground px-7 py-8 shadow-xl">
 
         {/* Avatar + heading */}
         <div className="flex flex-col items-center mb-5">
           <div className="w-12 h-12 rounded-full bg-violet-600 flex items-center justify-center text-white text-xl font-bold select-none shadow-md mb-3">
             S
           </div>
-          <h1 className="text-xl font-bold text-white">Create your account</h1>
-          <p className="text-xs text-neutral-400 mt-0.5">Join Socially in under a minute.</p>
+          <h1 className="text-xl font-bold text-foreground">Create your account</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Join Socially in under a minute.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
 
           {/* Full name */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-neutral-300">
-              Full name <span className="text-neutral-500">(optional)</span>
+            <label className="text-xs text-foreground/80">
+              Full name <span className="text-muted-foreground">(optional)</span>
             </label>
             <input type="text" name="name" placeholder="Jane Doe" className={inputCls} />
           </div>
 
           {/* Username */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-neutral-300">Username</label>
+            <label className="text-xs text-foreground/80">Username</label>
             <input
               type="text" name="username" placeholder="janedoe" required
               pattern="[a-zA-Z0-9_]{3,20}" title="3–20 characters: letters, numbers, underscores"
@@ -77,18 +78,18 @@ export default function Register() {
 
           {/* Email */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-neutral-300">Email</label>
+            <label className="text-xs text-foreground/80">Email</label>
             <input type="email" name="email" placeholder="you@example.com" required className={inputCls} />
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs text-neutral-300">Password</label>
+              <label className="text-xs text-foreground/80">Password</label>
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="text-xs text-violet-400 hover:text-violet-300 transition"
+                className="text-xs text-violet-500 hover:text-violet-400 transition"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -102,7 +103,7 @@ export default function Register() {
 
           {/* Confirm password */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-neutral-300">Confirm password</label>
+            <label className="text-xs text-foreground/80">Confirm password</label>
             <input
               type={showPassword ? "text" : "password"}
               name="confirm" placeholder="Re-enter password" required
@@ -121,9 +122,9 @@ export default function Register() {
         </form>
 
         {/* Sign in link */}
-        <p className="mt-5 text-center text-xs text-neutral-400">
+        <p className="mt-5 text-center text-xs text-muted-foreground">
           Already have an account?{" "}
-          <a href="/login" className="font-semibold text-violet-400 hover:text-violet-300 transition">
+          <a href="/login" className="font-semibold text-violet-500 hover:text-violet-400 transition">
             Sign in
           </a>
         </p>

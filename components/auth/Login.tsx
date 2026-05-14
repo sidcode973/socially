@@ -36,19 +36,19 @@ export default function Login() {
   }
 
   const inputCls =
-    "w-full rounded-lg bg-[#242424] px-3 py-2 text-sm text-white placeholder-neutral-500 outline-none focus:ring-2 focus:ring-violet-600 transition";
+    "w-full rounded-lg bg-muted px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-violet-600 transition";
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0d0d0d] px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#161616] px-7 py-8 shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card text-card-foreground px-7 py-8 shadow-xl">
 
         {/* Avatar + heading */}
         <div className="flex flex-col items-center mb-6">
           <div className="w-12 h-12 rounded-full bg-violet-600 flex items-center justify-center text-white text-xl font-bold select-none shadow-md mb-3">
             S
           </div>
-          <h1 className="text-xl font-bold text-white">Welcome back</h1>
-          <p className="text-xs text-neutral-400 mt-0.5">Sign in to your Socially account.</p>
+          <h1 className="text-xl font-bold text-foreground">Welcome back</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Sign in to your Socially account.</p>
         </div>
 
         {/* Google */}
@@ -56,7 +56,7 @@ export default function Login() {
           type="button"
           onClick={handleGoogle}
           disabled={googleLoading || loading}
-          className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-white/10 bg-[#242424] py-2.5 text-sm font-medium text-white hover:bg-[#2a2a2a] disabled:opacity-60 transition mb-5"
+          className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-border bg-muted py-2.5 text-sm font-medium text-foreground hover:bg-muted/80 disabled:opacity-60 transition mb-5"
         >
           <GoogleIcon />
           {googleLoading ? "Redirecting…" : "Continue with Google"}
@@ -64,16 +64,16 @@ export default function Login() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-neutral-500">or sign in with email</span>
-          <div className="flex-1 h-px bg-white/10" />
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-xs text-muted-foreground">or sign in with email</span>
+          <div className="flex-1 h-px bg-border" />
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
 
           {/* Email */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-neutral-300">Email</label>
+            <label className="text-xs text-foreground/80">Email</label>
             <input
               type="email"
               name="email"
@@ -86,11 +86,11 @@ export default function Login() {
           {/* Password */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs text-neutral-300">Password</label>
+              <label className="text-xs text-foreground/80">Password</label>
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="text-xs text-violet-400 hover:text-violet-300 transition"
+                className="text-xs text-violet-500 hover:text-violet-400 transition"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -115,9 +115,9 @@ export default function Login() {
         </form>
 
         {/* Register link */}
-        <p className="mt-5 text-center text-xs text-neutral-400">
+        <p className="mt-5 text-center text-xs text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <a href="/register" className="font-semibold text-violet-400 hover:text-violet-300 transition">
+          <a href="/register" className="font-semibold text-violet-500 hover:text-violet-400 transition">
             Create one
           </a>
         </p>
